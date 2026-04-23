@@ -183,7 +183,7 @@
                   CUSTOMER VIDEO
                 </span>
                 <span class="font-mono text-[10px] text-white/50 tracking-widest inline-flex items-center gap-1">
-                  TLDV <i data-lucide="external-link" class="w-3 h-3"></i>
+                  YOUTUBE
                 </span>
               </div>
 
@@ -199,8 +199,7 @@
                 </div>
               </div>
 
-              <div class="mt-5 flex items-start gap-2.5 p-3 rounded-xl bg-mint/[0.06] border border-mint/20 max-w-2xl" style="
-    max-width: 75%;>
+              <div class="mt-5 flex items-start gap-2.5 p-3 rounded-xl bg-mint/[0.06] border border-mint/20 max-w-2xl">
                 <i data-lucide="quote" class="w-5 h-5 text-mint mt-0.5 shrink-0" style="fill:currentColor"></i>
                 <p class="text-base lg:text-lg text-white leading-snug font-semibold">
                   "Glide is the dev leverage the ServiceNow ecosystem has been waiting for."
@@ -217,9 +216,9 @@
               </div>
               <div class="text-center">
                 <div class="font-mono text-[11px] tracking-widest text-mint inline-flex items-center gap-1">
-                  WATCH NOW <i data-lucide="external-link" class="w-3 h-3"></i>
+                  PLAY VIDEO
                 </div>
-                <div class="mt-1 font-mono text-[10px] text-white/40">TLDV RECORDING</div>
+                <div class="mt-1 font-mono text-[10px] text-white/40">CUSTOMER RECORDING</div>
               </div>
             </div>
           </div>
@@ -543,6 +542,16 @@
     </div>
   </footer>
 
+  <!-- =================== VIDEO MODAL =================== -->
+  <div id="videoModal" class="hidden fixed inset-0 z-[80] items-center justify-center p-4 bg-black/85 backdrop-blur-md" role="dialog" aria-modal="true" aria-label="Customer video">
+    <div class="relative w-full max-w-5xl aspect-video rounded-2xl overflow-hidden border border-white/10 bg-black shadow-2xl" id="videoModalInner">
+      <button type="button" id="videoCloseBtn" aria-label="Close video" class="absolute top-3 right-3 z-10 w-10 h-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors">
+        <i data-lucide="x" class="w-4 h-4"></i>
+      </button>
+      <div id="videoFrameSlot" class="w-full h-full"></div>
+    </div>
+  </div>
+
   <!-- =================== DATA + LOGIC =================== -->
   <script>
     /* Data for repeating blocks */
@@ -733,11 +742,48 @@
       lucide.createIcons();
     }));
 
-    // TLDV video link (open in new tab)
+    // Video modal (embedded YouTube via privacy-enhanced domain to avoid Error 153)
+    const VIDEO_ID = "1arRyAToBjs";
+    const VIDEO_EMBED = "https://www.youtube-nocookie.com/embed/" + VIDEO_ID + "?autoplay=1&rel=0&modestbranding=1&playsinline=1";
+    const VIDEO_WATCH = "https://www.youtube.com/watch?v=" + VIDEO_ID;
+    const videoModal = document.getElementById("videoModal");
+    const videoModalInner = document.getElementById("videoModalInner");
+    const videoCloseBtn = document.getElementById("videoCloseBtn");
+    const videoFrameSlot = document.getElementById("videoFrameSlot");
+
+    const openVideo = () => {
+      // If the page is opened directly from disk (file://) YouTube blocks embeds with Error 153.
+      // In that case, just open the video on YouTube in a new tab.
+      if (location.protocol === "file:") {
+        window.open(VIDEO_WATCH, "_blank", "noopener,noreferrer");
+        return;
+      }
+      videoFrameSlot.innerHTML =
+        '<iframe src="' + VIDEO_EMBED + '" title="Chirag Jindal on Glide.ai" ' +
+        'allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" ' +
+        'referrerpolicy="strict-origin-when-cross-origin" allowfullscreen class="w-full h-full"></iframe>' +
+        '<a href="' + VIDEO_WATCH + '" target="_blank" rel="noreferrer" ' +
+        'class="absolute bottom-3 left-3 px-3 py-1.5 rounded-full bg-black/70 border border-white/10 font-mono text-[11px] text-white/70 hover:text-mint backdrop-blur-sm inline-flex items-center gap-1.5">' +
+        'Watch on YouTube <svg viewBox="0 0 24 24" class="w-3 h-3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 17L17 7M7 7h10v10"/></svg></a>';
+      videoModal.classList.remove("hidden");
+      videoModal.classList.add("flex");
+      document.body.style.overflow = "hidden";
+    };
+    const closeVideo = () => {
+      videoModal.classList.add("hidden");
+      videoModal.classList.remove("flex");
+      videoFrameSlot.innerHTML = "";
+      document.body.style.overflow = "";
+    };
     document.querySelectorAll("[data-tldv]").forEach(btn => {
-      btn.addEventListener("click", () => {
-        window.open("https://tldv.io/app/meetings/69e131b8f07a170012c8b1ea/", "_blank", "noopener,noreferrer");
-      });
+      btn.addEventListener("click", openVideo);
+    });
+    videoCloseBtn.addEventListener("click", closeVideo);
+    videoModal.addEventListener("click", (e) => {
+      if (!videoModalInner.contains(e.target)) closeVideo();
+    });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && !videoModal.classList.contains("hidden")) closeVideo();
     });
 
     // Init lucide icons
